@@ -1,0 +1,29 @@
+{
+  "label": {
+    "table": "データソース",
+    "view": "データ範囲",
+    "field": "アイコン",
+    "mode": "埋め込み方法",
+    "number": "数量",
+    "style": {
+      "name": "スタイル",
+      "row_num": "行数",
+      "column_num": "列数",
+      "row_gap": "行間隔",
+      "column_gap": "列間隔",
+      "radius": "角丸",
+      "border_width": "ボーダー幅",
+      "border_color": "ボーダーカラー",
+      "background_color": "背景色"
+    },
+    "speed": "スライド遅延",
+    "show_page_break": "ページブレイクを表示"
+  },
+  "allData": "全てのデータ",
+  "placeholder": {
+    "attachment": "添付ファイルフィールドを選択してください"
+  },
+  "btn": {
+    "save": "保存"
+  }
+}

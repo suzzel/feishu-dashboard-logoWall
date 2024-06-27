@@ -1,0 +1,30 @@
+{
+  "label": {
+    "table": "数据源",
+    "view": "数据范围",
+    "field": "图标",
+    "mode": "填充方式",
+    "number": "数量",
+    "style": {
+      "name": "样式",
+      "row_num": "行数",
+      "column_num": "列数",
+      "row_gap": "行间距",
+      "column_gap": "列间距",
+      "radius": "圆角",
+      "border_width": "边框",
+      "border_color": "边框颜色",
+      "background_color": "背景颜色"
+    },
+    "speed": "滑动延迟",
+    "show_page_break": "显示分页符"
+
+  },
+  "allData": "全部数据",
+  "placeholder": {
+    "attachment": "请选择附件字段"
+  },
+  "btn": {
+    "save": "保存"
+  }
+} 

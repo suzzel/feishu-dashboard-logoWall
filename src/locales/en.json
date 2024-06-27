@@ -1,0 +1,29 @@
+{
+  "label": {
+    "table": "Data Source",
+    "view": "Data Range",
+    "field": "Icon",
+    "mode": "Fill Mode",
+    "number": "Quantity",
+    "style": {
+      "name": "Style",
+      "row_num": "Number of Rows",
+      "column_num": "Number of Columns",
+      "row_gap": "Row Spacing",
+      "column_gap": "Column Spacing",
+      "radius": "Corner Radius",
+      "border_width": "Border Width",
+      "border_color": "Border Color",
+      "background_color": "Background Color"
+    },
+    "speed": "Scroll Delay",
+    "show_page_break": "Show Page Break"
+  },
+  "allData": "All Data",
+  "placeholder": {
+    "attachment": "Please select an attachment field"
+  },
+  "btn": {
+    "save": "Save"
+  }
+}
