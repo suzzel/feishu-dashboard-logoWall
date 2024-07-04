@@ -1,5 +1,7 @@
 <script setup>
 import Form from './components/Form.vue'
+
+
 </script>
 
 <template>
@@ -10,7 +12,8 @@ import Form from './components/Form.vue'
 
 <style scoped>
   main {
-    padding: 1rem;
+    width: 100vw;
+    height: 100vh;
   }
   h4 {
     font-size: calc(1.275rem + 0.3vw);
