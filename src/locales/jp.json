@@ -14,7 +14,10 @@
       "radius": "角丸",
       "border_width": "ボーダー幅",
       "border_color": "ボーダーカラー",
-      "background_color": "背景色"
+      "background_color": "背景色",
+      "background_opacity": "背景の透明度",
+      "border_opacity": "境界線の透明度",
+      "logo_size": "ロゴのサイズ"
     },
     "speed": "スライド遅延",
     "show_page_break": "ページブレイクを表示"

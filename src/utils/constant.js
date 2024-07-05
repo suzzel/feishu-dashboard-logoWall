@@ -1,1 +1,1 @@
-export const DEFAULT_IMAGE_PATH = '../../public/image/default-logo.png'
+export const DEFAULT_IMAGE_PATH = '../../public/image/default_logo.svg'

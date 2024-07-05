@@ -12,9 +12,12 @@
       "row_gap": "行间距",
       "column_gap": "列间距",
       "radius": "圆角",
-      "border_width": "边框",
+      "border_width": "边框宽度",
       "border_color": "边框颜色",
-      "background_color": "背景颜色"
+      "background_color": "背景颜色",
+      "background_opacity": "背景透明度",
+      "border_opacity": "边框透明度",
+      "logo_size": "标志尺寸"
     },
     "speed": "滑动延迟",
     "show_page_break": "显示分页符"

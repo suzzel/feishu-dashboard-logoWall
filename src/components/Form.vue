@@ -5,7 +5,12 @@
   >
     <div
       v-if="state === STATE_ARRAY[1] || state === STATE_ARRAY[0]"
-      style="width: 100%; height: 1px; background-color: #dee0e3; position: absolute"
+      style="
+        width: 100%;
+        height: 1px;
+        background-color: var(--semi-color-stroke);
+        position: absolute;
+      "
     ></div>
     <LayoutContent
       class="layout-content"
@@ -23,7 +28,7 @@
       <div class="carousel-container">
         <Carousel
           animation="fade"
-          theme="dark"
+          :theme="isDark ? 'light' : 'dark'"
           style="width: 100%; height: 100%"
           indicatorType="line"
           :showArrow="false"
@@ -49,7 +54,17 @@
                 :style="{
                   width: 100 + '%',
                   borderRadius: targetStyleRadious + 'px',
-                  border: targetStyleBorderWidth + 'px solid ' + targetStyleBorderColor,
+                  border:
+                    targetStyleBorderWidth +
+                    'px' +
+                    ' ' +
+                    targetBorderOption +
+                    ' ' +
+                    `rgba(${hexToRgb(targetStyleBorderColor).r}, ${
+                      hexToRgb(targetStyleBorderColor).g
+                    }, ${hexToRgb(targetStyleBorderColor).b}, ${
+                      targetStyleBorderOpacity / 100
+                    })`,
                   backgroundColor: `rgba(${hexToRgb(targetStyleBgColor).r}, ${
                     hexToRgb(targetStyleBgColor).g
                   }, ${hexToRgb(targetStyleBgColor).b}, ${targetStyleOpacity / 100})`,
@@ -61,11 +76,15 @@
                 <img
                   v-show="!isLoading"
                   :src="url"
-                  :style="{ objectFit: targetModeOption, width: logoPercent + '%', height:logoPercent + '%' }"
+                  :style="{
+                    objectFit: targetModeOption,
+                    width: logoPercent + '%',
+                    height: logoPercent + '%',
+                  }"
                   @load="onImageLoad"
                   class="logoImage"
                 />
-                <div v-show="isLoading" :size="large"><Spin /></div>
+                <div v-show="isLoading"><Spin size="middle" /></div>
               </div>
             </div>
           </div>
@@ -77,7 +96,11 @@
     <LayoutSider
       v-if="state === STATE_ARRAY[1] || state === STATE_ARRAY[0]"
       class="layout-sider"
-      style="height: 100%; border-left: 1px solid #dee0e3; flex: 0 0 340px"
+      style="
+        height: 100%;
+        border-left: 1px solid var(--semi-color-stroke);
+        flex: 0 0 340px;
+      "
     >
       <!-- TABLE SELECT  -->
       <div
@@ -105,7 +128,7 @@
                 margin-top: 8px;
                 width: 100%;
                 background-color: transparent;
-                border: 1px solid var(--semi-color-tertiary-light-hover);
+                border: 1px solid var(--semi-color-stroke);
                 border-radius: 6px;
               "
             />
@@ -121,7 +144,7 @@
                 margin-top: 8px;
                 width: 100%;
                 background-color: transparent;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
+                border: 1px solid var(--semi-color-stroke);
                 border-radius: 6px;
               "
             />
@@ -138,7 +161,7 @@
                 margin-top: 8px;
                 width: 100%;
                 background-color: transparent;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
+                border: 1px solid var(--semi-color-stroke);
                 border-radius: 6px;
               "
             />
@@ -156,43 +179,9 @@
                 margin-top: 8px;
                 width: 100%;
                 background-color: transparent;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
+                border: 1px solid var(--semi-color-stroke);
                 border-radius: 6px;
               "
-            />
-          </a-form-item>
-
-          <a-form-item class="a-form-item">
-            <div class="lable">{{ $t("label.style.opacity") }}</div>
-            <InputNumber
-              size="default"
-              style="
-                margin-top: 8px;
-                width: 100%;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
-                border-radius: 6px;
-              "
-              :value="targetStyleOpacity"
-              :min="0"
-              :max="100"
-              @change="onOriginalStyleOpacity"
-            />
-          </a-form-item>
-
-          <a-form-item class="a-form-item">
-            <div class="lable">{{ $t("label.style.2222") }}</div>
-            <InputNumber
-              size="default"
-              style="
-                margin-top: 8px;
-                width: 100%;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
-                border-radius: 6px;
-              "
-              :value="logoPercent"
-              :min="0"
-              :max="100"
-              @change="onLogoPercent"
             />
           </a-form-item>
 
@@ -202,7 +191,7 @@
               style="
                 margin-top: 8px;
                 width: 100%;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
+                border: 1px solid var(--semi-color-stroke);
                 border-radius: 6px;
               "
               :value="targetNumberShown"
@@ -221,7 +210,7 @@
                     style="
                       margin-top: 8px;
                       width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :value="targetStyleRowNumber"
@@ -236,7 +225,7 @@
                     style="
                       margin-top: 8px;
                       width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :value="targetStyleColumnNumber"
@@ -252,7 +241,7 @@
                     style="
                       margin-top: 8px;
                       width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :value="targetStyleRowGap"
@@ -267,7 +256,7 @@
                     style="
                       margin-top: 8px;
                       width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :value="targetStyleColumnGap"
@@ -277,32 +266,32 @@
               </div>
               <div>
                 <b-form-item class="b-form-item">
+                  <div>{{ $t("label.style.logo_size") }}</div>
+                  <InputNumber
+                    size="default"
+                    style="
+                      margin-top: 8px;
+                      width: 100%;
+                      border: 1px solid var(--semi-color-stroke);
+                      border-radius: 6px;
+                    "
+                    :value="logoPercent"
+                    @change="onLogoPercent"
+                  />
+                </b-form-item>
+
+                <b-form-item class="b-form-item">
                   <div>{{ $t("label.style.radius") }}</div>
                   <InputNumber
                     size="default"
                     style="
                       margin-top: 8px;
                       width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :value="targetStyleRadious"
                     @change="onOriginalStyleRadious"
-                  />
-                </b-form-item>
-
-                <b-form-item class="b-form-item">
-                  <div>{{ $t("label.style.border_width") }}</div>
-                  <InputNumber
-                    size="default"
-                    style="
-                      margin-top: 8px;
-                      width: 100%;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
-                      border-radius: 6px;
-                    "
-                    :value="targetStyleBorderWidth"
-                    @change="onOriginalStyleBorderWidth"
                   />
                 </b-form-item>
               </div>
@@ -315,7 +304,8 @@
                     type="color"
                     style="
                       margin-top: 8px;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      height: 34px;
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :suffix="targetStyleBgColor"
@@ -325,6 +315,24 @@
                 </b-form-item>
 
                 <b-form-item class="b-form-item">
+                  <div>{{ $t("label.style.background_opacity") }}</div>
+                  <InputNumber
+                    size="default"
+                    style="
+                      margin-top: 8px;
+                      width: 100%;
+                      border: 1px solid var(--semi-color-stroke);
+                      border-radius: 6px;
+                    "
+                    :value="targetStyleOpacity"
+                    :min="0"
+                    :max="100"
+                    @change="onOriginalStyleOpacity"
+                  />
+                </b-form-item>
+              </div>
+              <div>
+                <b-form-item class="b-form-item">
                   <div>{{ $t("label.style.border_color") }}</div>
                   <Input
                     class-name="borderColorInput"
@@ -332,12 +340,64 @@
                     type="color"
                     style="
                       margin-top: 8px;
-                      border: 1px solid rgba(var(--semi-grey-2), 1);
+                      height: 34px;
+                      border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
                     :suffix="targetStyleBorderColor"
                     :value="targetStyleBorderColor"
                     @change="onOriginalStyleBorderColor"
+                  />
+                </b-form-item>
+
+                <b-form-item class="b-form-item">
+                  <div>{{ $t("label.style.border_opacity") }}</div>
+                  <InputNumber
+                    size="default"
+                    style="
+                      margin-top: 8px;
+                      width: 100%;
+                      border: 1px solid var(--semi-color-stroke);
+                      border-radius: 6px;
+                    "
+                    :min="0"
+                    :max="100"
+                    :value="targetStyleBorderOpacity"
+                    @change="onOriginalStyleBorderOpacity"
+                  />
+                </b-form-item>
+              </div>
+
+              <div>
+                <b-form-item class="b-form-item">
+                  <div>{{ $t("label.mode") }}</div>
+                  <Select
+                    :optionList="borderOptionList"
+                    defaultValue="solid"
+                    :value="targetBorderOption"
+                    @change="onBorderOptionChange"
+                    style="
+                      margin-top: 8px;
+                      width: 100%;
+                      height: 34px;
+                      border: 1px solid var(--semi-color-stroke);
+                      border-radius: 6px;
+                    "
+                  />
+                </b-form-item>
+
+                <b-form-item class="b-form-item">
+                  <div>{{ $t("label.style.border_width") }}</div>
+                  <InputNumber
+                    size="default"
+                    style="
+                      margin-top: 8px;
+                      width: 100%;
+                      border: 1px solid var(--semi-color-stroke);
+                      border-radius: 6px;
+                    "
+                    :value="targetStyleBorderWidth"
+                    @change="onOriginalStyleBorderWidth"
                   />
                 </b-form-item>
               </div>
@@ -351,7 +411,7 @@
                 margin-top: 8px;
                 width: 100%;
                 border-radius: 6px;
-                border: 1px solid rgba(var(--semi-grey-2), 1);
+                border: 1px solid var(--semi-color-stroke);
               "
               :value="targetCarouselSpeed"
               @change="onTargetCarouselSpeed"
@@ -374,7 +434,8 @@
     </LayoutSider>
   </Layout>
 </template>
-<script>
+
+<script lang="ts">
 export default {
   data() {
     return {
@@ -386,21 +447,21 @@ export default {
     onImageLoad() {
       this.isLoading = false;
     },
+
+    hexToRgb(hex) {
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+          }
+        : null;
+    },
   },
 };
-
-function hexToRgb(hex) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : null;
-}
 </script>
-<script setup>
+<script lang="ts" setup>
 import { dashboard, DashboardState, bitable } from "@lark-base-open/js-sdk";
 import { useI18n } from "vue-i18n";
 import { ref, onMounted, computed, watch, createVNode } from "vue";
@@ -423,6 +484,11 @@ import * as myBase from "../utils/base.js";
 import * as CONSTANT from "../utils/constant.js";
 import * as commonFn from "../utils/common.js";
 
+// -- 声明 isDark 属性
+defineProps<{
+  isDark: boolean;
+}>();
+
 // -- 配置区域
 const { t } = useI18n(); // 国际化
 const STATE_ARRAY = ["Create", "Config", "View", "FullScreen"];
@@ -434,18 +500,20 @@ const targetTableId = ref("");
 const targetViewId = ref("");
 const targetFieldId = ref("");
 const targetModeOption = ref("contain");
-const targetNumberShown = ref(12);
+const targetBorderOption = ref("solid");
+const targetNumberShown = ref(20);
 const targetStyleRowNumber = ref(2);
 const targetStyleColumnNumber = ref(3);
 const targetStyleRowGap = ref(10);
 const targetStyleColumnGap = ref(10);
 const targetStyleRadious = ref(10);
-const targetStyleBorderWidth = ref(0);
-const targetStyleBgColor = ref("#f8f8f8");
-const targetStyleBorderColor = ref("#fff");
+const targetStyleBorderWidth = ref(1);
+const targetStyleBgColor = ref("#888888");
+const targetStyleBorderColor = ref("#888888");
+const targetStyleBorderOpacity = ref(10);
 const targetStyleOpacity = ref(10);
 const targetCarouselSpeed = ref(5);
-const logoPercent = ref(100);
+const logoPercent = ref(80);
 
 // -- 辅助数据
 const tableOptionList = ref([]);
@@ -455,6 +523,12 @@ const modeOptionList = ref([
   { label: "适应", value: "contain" },
   { label: "裁切铺满", value: "cover" },
   { label: "拉伸填充", value: "fill" },
+]);
+const borderOptionList = ref([
+  { label: "实线", value: "solid" },
+  { label: "双边框", value: "double" },
+  { label: "虚点边框", value: "dotted" },
+  { label: "虚线边框", value: "dashed" },
 ]);
 const autoPlayConfig = ref({
   interval: 1500,
@@ -477,20 +551,22 @@ const saveConfig = async () => {
       viewId: targetViewId.value,
       fieldId: targetFieldId.value,
       modeOption: targetModeOption.value,
+      borderOption: targetBorderOption.value,
       numberShown: targetNumberShown.value,
       targetStyleRowNumber: targetStyleRowNumber.value,
       targetStyleColumnNumber: targetStyleColumnNumber.value,
       styleRowGap: targetStyleRowGap.value,
       styleColumnGap: targetStyleColumnGap.value,
-      targetStyleRadious: targetStyleRadious.value, // 新增
+      targetStyleRadious: targetStyleRadious.value,
       originAttachmentList: JSON.stringify(originAttachmentList),
       logoShownList: JSON.stringify(logoShownList.value),
       targetCarouselSpeed: targetCarouselSpeed.value,
       targetStyleBgColor: targetStyleBgColor.value,
       targetStyleOpacity: targetStyleOpacity.value,
       targetStyleBorderColor: targetStyleBorderColor.value,
+      targetStyleBorderOpacity: targetStyleBorderOpacity.value,
       targetStyleBorderWidth: targetStyleBorderWidth.value,
-      logoPercent: logoPercent.value
+      logoPercent: logoPercent.value,
     },
   });
 
@@ -541,7 +617,16 @@ watch(targetViewId, async (newViewId, oldViewId) => {
   if (newViewId !== "")
     fieldOptionList.value = await queryFieldOptionList(targetTableId.value, newViewId);
 });
-
+watch(targetTableId, async (newTableId) => {
+  if (newTableId !== "") {
+    // 获取新的视图选项列表
+    viewOptionList.value = await queryViewOptionList(newTableId);
+    // 重置视图ID为默认值
+    targetViewId.value = queryViewIdDefaultValue();
+    // 根据新的表格ID和视图ID获取字段选项列表
+    fieldOptionList.value = await queryFieldOptionList(newTableId, targetViewId.value);
+  }
+});
 // 3. 依据fieldId和viewId变化，获取attachmentList
 watch(
   [targetViewId, targetFieldId],
@@ -572,6 +657,9 @@ watch(dashboard.state, async (newState, oldState) => {
  */
 const onTableIdChange = (e) => {
   targetTableId.value = e;
+  // 清空 url 和 field select 的选项
+  targetFieldId.value = "";
+  url = ""
 };
 
 /**
@@ -620,6 +708,10 @@ const onModeOptionChange = (e) => {
   targetModeOption.value = e;
 };
 
+const onBorderOptionChange = (e) => {
+  targetBorderOption.value = e;
+};
+
 /**
  * @command {} 监听 轮播图切换
  * @param {string} newIndex 轮播图当前index
@@ -664,6 +756,10 @@ const onOriginalStyleBgColor = (e) => {
 
 const onOriginalStyleBorderColor = (e) => {
   targetStyleBorderColor.value = e;
+};
+
+const onOriginalStyleBorderOpacity = (e) => {
+  targetStyleBorderOpacity.value = e;
 };
 
 const onTargetCarouselSpeed = (e) => {
@@ -777,6 +873,7 @@ const initDashboard = async (config) => {
   targetViewId.value = customConfig.viewId;
   targetFieldId.value = customConfig.fieldId;
   targetModeOption.value = customConfig.modeOption;
+  targetBorderOption.value = customConfig.borderOption;
   targetNumberShown.value = customConfig.numberShown;
   targetStyleColumnNumber.value = customConfig.targetStyleColumnNumber;
   targetStyleRowNumber.value = customConfig.targetStyleRowNumber;
@@ -786,6 +883,7 @@ const initDashboard = async (config) => {
   targetCarouselSpeed.value = customConfig.targetCarouselSpeed;
   targetStyleBgColor.value = customConfig.targetStyleBgColor;
   targetStyleBorderColor.value = customConfig.targetStyleBorderColor;
+  targetStyleBorderOpacity.value = customConfig.targetStyleBorderOpacity;
   targetStyleBorderWidth.value = customConfig.targetStyleBorderWidth;
   targetStyleOpacity.value = customConfig.targetStyleOpacity;
   logoPercent.value = customConfig.logoPercent;
@@ -813,6 +911,7 @@ onMounted(async () => {
     if (!"customConfig" in config) await initWithoutConfig();
     else await initDashboard(config);
   }
+  
 });
 </script>
 
@@ -860,7 +959,7 @@ onMounted(async () => {
 }
 
 :deep(.semi-input-number-suffix-btns) {
-  border-left: 1px solid rgba(var(--semi-grey-2), 1);
+  border-left: 1px solid var(--semi-color-stroke);
   border-bottom: none;
   border-top: none;
   border-right: none;
@@ -887,6 +986,7 @@ onMounted(async () => {
   font-weight: 400;
   line-height: 22px;
   text-align: left;
+  color: var(--semi-color-text-0);
 }
 
 .style-container {
@@ -895,8 +995,7 @@ onMounted(async () => {
   padding: 16px 8px;
   gap: 20px;
   border-radius: 6px;
-  background-color: #f5f6f7;
-
+  background-color: rgba(135, 135, 135, 0.08);
   display: flex;
   flex-direction: column;
 }
@@ -910,7 +1009,7 @@ onMounted(async () => {
 .style-container > div > b-form-item {
   width: 48%;
   font-size: 12px !important;
-  color: #646a73 !important;
+  color: var(--semi-color-text-1);
 }
 
 .page-container {
@@ -936,11 +1035,6 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
 }
-
-/* :deep(.logo-container img, .semi-image-img-preview) {
-  width: 100%;
-  height: 100%;
-} */
 
 :deep(.semi-image) {
   display: flex;

@@ -10,6 +10,8 @@
     "@douyinfe/semi-ui": "^2.61.0",
     "@kousum/semi-ui-vue": "^0.13.4",
     "@lark-base-open/js-sdk": "^0.4.0-alpha.1",
+    "@semi-bot/semi-theme-feishu-dashboard": "^1.0.4",
+    "@vueuse/core": "^10.11.0",
     "axios": "^1.6.3",
     "element-plus": "^2.3.6",
     "reset-css": "^5.0.1",

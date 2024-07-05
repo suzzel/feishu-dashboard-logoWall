@@ -14,7 +14,10 @@
       "radius": "Corner Radius",
       "border_width": "Border Width",
       "border_color": "Border Color",
-      "background_color": "Background Color"
+      "background_color": "Background Color",
+      "background_opacity": "Background Transparency",
+      "border_opacity": "Border Transparency",
+      "logo_size": "Logo Size"
     },
     "speed": "Scroll Delay",
     "show_page_break": "Show Page Break"
