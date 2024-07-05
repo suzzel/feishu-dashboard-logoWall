@@ -439,32 +439,16 @@
 export default {
   data() {
     return {
-      isLoading: true,
-      url: "your image url",
+      
     };
   },
-  methods: {
-    onImageLoad() {
-      this.isLoading = false;
-    },
-
-    hexToRgb(hex) {
-      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-          }
-        : null;
-    },
-  },
+  
 };
 </script>
 <script lang="ts" setup>
 import { dashboard, DashboardState, bitable } from "@lark-base-open/js-sdk";
 import { useI18n } from "vue-i18n";
-import { ref, onMounted, computed, watch, createVNode } from "vue";
+import { ref, onMounted, onUnmounted, onUpdated, computed, watch, createVNode } from "vue";
 import axios from "axios";
 import {
   Layout,
@@ -539,6 +523,7 @@ const carouselActiveIndex = ref(0); // 轮播图当前索引
 let intervalId = "";
 
 let originAttachmentList = []; // 原始附件列表
+let isLoading = ref(true);
 
 // -- 方法 --
 /**
@@ -570,12 +555,39 @@ const saveConfig = async () => {
     },
   });
 
-  await initDashboard();
+  // 初始化勾选字段
+  
+  // console.log(1111)
+  // // const data = await dashboard.getData()
+  // // console.log("data", data)
+  // const config = await dashboard.getConfig();
+  // console.log("config", config);
+  // if (!"customConfig" in config) await initWithoutConfig();
+  // else await initDashboard(config);
+
+  // console.log("originAttachmentList", originAttachmentList)
+  // window.location.reload();
+
 };
 
 const simulateCarouselChange = () => {
   carouselActiveIndex.value =
     (carouselActiveIndex.value + 1) % logoShownList.value.length;
+};
+
+const onImageLoad = () => {
+  isLoading.value = false;
+};
+
+const hexToRgb = (hex) => {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 };
 
 /**
@@ -603,21 +615,19 @@ const queryAttachementList = async (tableId, viewId, attachmentFieldId, length) 
   );
 };
 
+/**
+ * @command {set} originAttachmentList 设置logo数组为初始值
+ * 
+ */
+const SetLogoListToDefault = () => {
+  originAttachmentList = queryOriginalAttachmentListDefaultValue()
+  splitLogoShownList(originAttachmentList);
+}
+
 // --== 监听事件：包括 watch 方法和 @change 方法
 
 // 1. 依据tableId变化，更新viewOptionList
 watch(targetTableId, async (newTableId, oldTableId) => {
-  console.log("watch view", newTableId, oldTableId);
-  if (newTableId !== "") viewOptionList.value = await queryViewOptionList(newTableId);
-});
-
-// 2. 依据viewId变化，更新fieldOptionList
-watch(targetViewId, async (newViewId, oldViewId) => {
-  console.log("watch field", newViewId, oldViewId);
-  if (newViewId !== "")
-    fieldOptionList.value = await queryFieldOptionList(targetTableId.value, newViewId);
-});
-watch(targetTableId, async (newTableId) => {
   if (newTableId !== "") {
     // 获取新的视图选项列表
     viewOptionList.value = await queryViewOptionList(newTableId);
@@ -625,8 +635,24 @@ watch(targetTableId, async (newTableId) => {
     targetViewId.value = queryViewIdDefaultValue();
     // 根据新的表格ID和视图ID获取字段选项列表
     fieldOptionList.value = await queryFieldOptionList(newTableId, targetViewId.value);
+    
+    SetLogoListToDefault()
   }
+  if (oldTableId !== "") targetFieldId.value = "";
 });
+
+// 2. 依据viewId变化，更新fieldOptionList
+watch(targetViewId, async (newViewId, oldViewId) => {
+  console.log("watch field", newViewId, oldViewId);
+  if (newViewId !== "") {
+    fieldOptionList.value = await queryFieldOptionList(targetTableId.value, newViewId);
+    
+    SetLogoListToDefault()
+  }
+  if (oldViewId !== "") targetFieldId.value = "";
+    
+});
+
 // 3. 依据fieldId和viewId变化，获取attachmentList
 watch(
   [targetViewId, targetFieldId],
@@ -640,8 +666,6 @@ watch(
       );
       // 数组拆分
       splitLogoShownList(originAttachmentList);
-      const previewData = await dashboard.getPreviewData();
-      console.log("previewData", previewData);
     }
   }
 );
@@ -657,9 +681,6 @@ watch(dashboard.state, async (newState, oldState) => {
  */
 const onTableIdChange = (e) => {
   targetTableId.value = e;
-  // 清空 url 和 field select 的选项
-  targetFieldId.value = "";
-  url = ""
 };
 
 /**
@@ -891,7 +912,7 @@ const initDashboard = async (config) => {
   originAttachmentList = JSON.parse(customConfig.originAttachmentList);
   // targetCarouselSpeed.value =
   //   "carouselSpeed" in customConfig ? customConfig.carouselSpeed : 5;
-
+  console.log("initDashboard >> logoShownList", logoShownList.value[0])
   // 模拟定时切换
   intervalId = setInterval(simulateCarouselChange, targetCarouselSpeed.value * 1000);
 
@@ -906,13 +927,23 @@ onMounted(async () => {
   if (state.value == STATE_ARRAY[0]) {
     await initWithoutConfig();
   } else {
+    console.log(1111)
+    // const data = await dashboard.getData()
+    // console.log("data", data)
     const config = await dashboard.getConfig();
     console.log("config", config);
     if (!"customConfig" in config) await initWithoutConfig();
     else await initDashboard(config);
   }
-  
 });
+
+onUpdated( () => {
+  console.log(3333)
+})
+
+onUnmounted(async () => {
+  console.log(222)
+})
 </script>
 
 <style scoped>

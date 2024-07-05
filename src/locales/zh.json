@@ -15,8 +15,8 @@
       "border_width": "边框宽度",
       "border_color": "边框颜色",
       "background_color": "背景颜色",
-      "background_opacity": "背景透明度",
-      "border_opacity": "边框透明度",
+      "background_opacity": "背景不透明度",
+      "border_opacity": "边框不透明度",
       "logo_size": "标志尺寸"
     },
     "speed": "滑动延迟",
