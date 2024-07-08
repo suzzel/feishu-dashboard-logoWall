@@ -521,7 +521,7 @@ const borderOptionList = ref([
 ]);
 const isLoading = ref(true)
 const carouselActiveIndex = ref(0); // 轮播图当前索引
-let intervalId = "";
+let intervalId = 0;
 
 let originAttachmentList: string[] = []; // 原始附件列表
 
@@ -729,7 +729,7 @@ const onOriginalStyleBorderColor = (e) => {
 const onTargetCarouselSpeed = (e) => {
   targetCarouselSpeed.value = e;
   clearInterval(intervalId);
-  intervalId = "";
+  intervalId = 0;
   intervalId = setInterval(simulateCarouselChange, targetCarouselSpeed.value * 1000);
 };
 
@@ -867,8 +867,11 @@ onMounted(async () => {
   } else {
     const config = await dashboard.getConfig();
     console.log("config", config);
-    if (!"customConfig" in config) await initWithoutConfig();
-    else await initDashboard(config);
+    if ("customConfig" in config) {
+      await initDashboard(config);
+    } else {
+      await initWithoutConfig();
+    } 
   }
 });
 </script>
