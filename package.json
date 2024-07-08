@@ -6,6 +6,7 @@
     "build": "vite build",
     "preview": "vite preview --port 4173"
   },
+  "output": "dist",
   "dependencies": {
     "@douyinfe/semi-ui": "^2.61.0",
     "@kousum/semi-ui-vue": "^0.13.4",

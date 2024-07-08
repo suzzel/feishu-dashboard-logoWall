@@ -9,6 +9,7 @@ import { semiTheming } from "./plugins/semi-theming"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "./",
   server: {
     host: '0.0.0.0',
   },
@@ -21,7 +22,7 @@ export default defineConfig({
 		// 	theme: "@semi-bot/semi-theme-feishu-dashboard"
 		// })
     ],
-    base: "./",
+  
 	resolve: {
 		alias: {
 		  "@": path.resolve(__dirname, "./src"),

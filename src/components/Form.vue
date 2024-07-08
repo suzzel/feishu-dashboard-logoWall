@@ -191,6 +191,7 @@
                 border-radius: 6px;
               "
               :value="targetNumberShown"
+              :min="1"
               @change="onOriginalNumberShownChange"
             />
           </a-form-item>
@@ -271,6 +272,7 @@
                       border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
+                    :min="0"
                     :value="logoPercent"
                     @change="onLogoPercent"
                   />
@@ -286,6 +288,7 @@
                       border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
+                    :min="0"
                     :value="targetStyleRadius"
                     @change="onOriginalStyleRadious"
                   />
@@ -360,6 +363,7 @@
                     :max="100"
                     :value="targetStyleBorderOpacity"
                     @change="onOriginalStyleBorderOpacity"
+                    
                   />
                 </b-form-item>
               </div>
@@ -379,6 +383,7 @@
                       border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
+                    
                   />
                 </b-form-item>
 
@@ -392,6 +397,7 @@
                       border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
+                    :min="0"
                     :value="targetStyleBorderWidth"
                     @change="onOriginalStyleBorderWidth"
                   />
@@ -409,6 +415,7 @@
                 border-radius: 6px;
                 border: 1px solid var(--semi-color-stroke);
               "
+              :min="0"
               :value="targetCarouselSpeed"
               @change="onTargetCarouselSpeed"
             />
@@ -431,20 +438,6 @@
   </Layout>
 </template>
 
-<script lang="ts">
-export default {
-  data() {
-    return {
-      isLoading: true,
-    };
-  },
-  methods: {
-    onImageLoad() {
-      this.isLoading = false;
-    },
-  },
-};
-</script>
 <script lang="ts" setup>
 import {
   dashboard,
@@ -526,7 +519,7 @@ const borderOptionList = ref([
   { label: "虚线", value: "dashed" },
   { label: "点线", value: "dotted" },
 ]);
-
+const isLoading = ref(true)
 const carouselActiveIndex = ref(0); // 轮播图当前索引
 let intervalId = "";
 
@@ -537,7 +530,7 @@ let originAttachmentList: string[] = []; // 原始附件列表
  * 保存配置
  */
 const saveConfig = async () => {
-  await dashboard.saveConfig({
+  const config = {
     customConfig: {
       tableId: targetTableId.value,
       viewId: targetViewId.value,
@@ -559,15 +552,20 @@ const saveConfig = async () => {
       targetBorderOption: targetBorderOption.value,
       targetStyleBorderOpacity: targetStyleBorderOpacity.value,
     },
-  });
+  }
+  await dashboard.saveConfig(config);
 
-  await initDashboard();
+  await initDashboard(config);
 };
 
 const simulateCarouselChange = () => {
   carouselActiveIndex.value =
     (carouselActiveIndex.value + 1) % logoShownList.value.length;
 };
+
+const onImageLoad = () => {
+  isLoading.value = false;
+}
 
 
 const formatOptionList = async (
@@ -611,12 +609,16 @@ const queryAttachmentList = async (
 watch(targetTableId, async (newTableId) => {
   if (newTableId !== "") viewOptionList.value = await queryViewOptionList(newTableId);
   fieldOptionList.value = await queryFieldOptionList(newTableId, targetViewId.value);
+  carouselActiveIndex.value = 0
 });
 
 // 2. 依据viewId变化，更新fieldOptionList
 watch(targetViewId, async (newViewId) => {
-  if (newViewId !== "")
+  if (newViewId !== "") {
     fieldOptionList.value = await queryFieldOptionList(targetTableId.value, newViewId);
+    carouselActiveIndex.value = 0
+  }
+  
 });
 
 // 3. 依据fieldId和viewId变化，获取attachmentList
@@ -632,8 +634,7 @@ watch([targetViewId, targetFieldId], async ([newViewId, newFieldId], []) => {
       )) ?? [];
     // 数组拆分
     splitLogoShownList(originAttachmentList);
-    const previewData = await dashboard.getPreviewData();
-    console.log("previewData", previewData);
+    carouselActiveIndex.value = 0
   }
 });
 
