@@ -28,11 +28,12 @@
       <div class="carousel-container">
         <Carousel
           animation="fade"
+          :speed="targetCarouselSpeed * 1000"
+          :autoPlay="true"
           :theme="isDark ? 'light' : 'dark'"
           style="width: 100%; height: 100%"
           indicatorType="line"
           :showArrow="false"
-          :activeIndex="carouselActiveIndex"
           @change="onCarouselChange"
         >
           <div
@@ -53,21 +54,15 @@
                 class="logo-container"
                 :style="{
                   width: 100 + '%',
-                  borderRadius: targetStyleRadious + 'px',
+                  borderRadius: targetStyleRadius + 'px',
                   border:
                     targetStyleBorderWidth +
                     'px' +
                     ' ' +
                     targetBorderOption +
                     ' ' +
-                    `rgba(${hexToRgb(targetStyleBorderColor).r}, ${
-                      hexToRgb(targetStyleBorderColor).g
-                    }, ${hexToRgb(targetStyleBorderColor).b}, ${
-                      targetStyleBorderOpacity / 100
-                    })`,
-                  backgroundColor: `rgba(${hexToRgb(targetStyleBgColor).r}, ${
-                    hexToRgb(targetStyleBgColor).g
-                  }, ${hexToRgb(targetStyleBgColor).b}, ${targetStyleOpacity / 100})`,
+                    `${targetStyleBorderColor}${targetStyleBorderOpacity}`,
+                  backgroundColor: `${targetStyleBgColor}${targetStyleOpacity}`,
                   boxSizing: 'border-box',
                 }"
                 v-for="(url, urlIndex) in page"
@@ -156,6 +151,7 @@
             <Select
               :optionList="fieldOptionList"
               :value="targetFieldId"
+              placeholder="请选择一个字段"
               @change="onFieldIdChange"
               style="
                 margin-top: 8px;
@@ -290,7 +286,7 @@
                       border: 1px solid var(--semi-color-stroke);
                       border-radius: 6px;
                     "
-                    :value="targetStyleRadious"
+                    :value="targetStyleRadius"
                     @change="onOriginalStyleRadious"
                   />
                 </b-form-item>
@@ -439,17 +435,26 @@
 export default {
   data() {
     return {
-      
+      isLoading: true,
     };
   },
-  
+  methods: {
+    onImageLoad() {
+      this.isLoading = false;
+    },
+  },
 };
 </script>
 <script lang="ts" setup>
-import { dashboard, DashboardState, bitable } from "@lark-base-open/js-sdk";
+import {
+  dashboard,
+  DashboardState,
+  bitable,
+  FieldType,
+  IFieldMeta,
+} from "@lark-base-open/js-sdk";
 import { useI18n } from "vue-i18n";
-import { ref, onMounted, onUnmounted, onUpdated, computed, watch, createVNode } from "vue";
-import axios from "axios";
+import { ref, onMounted, computed, watch, shallowRef } from "vue";
 import {
   Layout,
   LayoutSider,
@@ -464,11 +469,10 @@ import {
   Image,
   Slider,
 } from "@kousum/semi-ui-vue";
-import * as myBase from "../utils/base.js";
-import * as CONSTANT from "../utils/constant.js";
-import * as commonFn from "../utils/common.js";
+import * as myBase from "../utils/base";
+import * as CONSTANT from "../utils/constant";
+import * as commonFn from "../utils/common";
 
-// -- 声明 isDark 属性
 defineProps<{
   isDark: boolean;
 }>();
@@ -476,33 +480,41 @@ defineProps<{
 // -- 配置区域
 const { t } = useI18n(); // 国际化
 const STATE_ARRAY = ["Create", "Config", "View", "FullScreen"];
-
+type OptionItem = { label: string; value: string };
 // -- 核心数据
-const state = ref("View"); // 初始状态为配置模式
-const logoShownList = ref([]);
+const state = ref("Create"); // 初始状态为配置模式
+const logoShownList = ref<string[]>([]);
 const targetTableId = ref("");
 const targetViewId = ref("");
 const targetFieldId = ref("");
 const targetModeOption = ref("contain");
-const targetBorderOption = ref("solid");
 const targetNumberShown = ref(20);
 const targetStyleRowNumber = ref(2);
 const targetStyleColumnNumber = ref(3);
 const targetStyleRowGap = ref(10);
 const targetStyleColumnGap = ref(10);
-const targetStyleRadious = ref(10);
+const targetStyleRadius = ref(10);
 const targetStyleBorderWidth = ref(1);
 const targetStyleBgColor = ref("#888888");
 const targetStyleBorderColor = ref("#888888");
-const targetStyleBorderOpacity = ref(10);
 const targetStyleOpacity = ref(10);
-const targetCarouselSpeed = ref(5);
-const logoPercent = ref(80);
-
+const targetCarouselSpeed = ref(1);
+const logoPercent = ref(60);
+const targetBorderOption = ref("solid");
+const targetStyleBorderOpacity = ref(10);
+const fieldMetaList = shallowRef<IFieldMeta[]>([]);
+const fieldType = computed(() => {
+  if (fieldMetaList.value.length === 0 || !targetFieldId.value)
+    return FieldType.Attachment;
+  return (
+    fieldMetaList.value.find((item) => item.id === targetFieldId.value)?.type ??
+    FieldType.Attachment
+  );
+});
 // -- 辅助数据
-const tableOptionList = ref([]);
-const viewOptionList = ref([]);
-const fieldOptionList = ref([]);
+const tableOptionList = ref<OptionItem[]>([]);
+const viewOptionList = ref<OptionItem[]>([]);
+const fieldOptionList = ref<OptionItem[]>([]);
 const modeOptionList = ref([
   { label: "适应", value: "contain" },
   { label: "裁切铺满", value: "cover" },
@@ -510,20 +522,15 @@ const modeOptionList = ref([
 ]);
 const borderOptionList = ref([
   { label: "实线", value: "solid" },
-  { label: "双边框", value: "double" },
-  { label: "虚点边框", value: "dotted" },
-  { label: "虚线边框", value: "dashed" },
+  { label: "双线", value: "double" },
+  { label: "虚线", value: "dashed" },
+  { label: "点线", value: "dotted" },
 ]);
-const autoPlayConfig = ref({
-  interval: 1500,
-  hoverToPause: false,
-});
 
 const carouselActiveIndex = ref(0); // 轮播图当前索引
 let intervalId = "";
 
-let originAttachmentList = []; // 原始附件列表
-let isLoading = ref(true);
+let originAttachmentList: string[] = []; // 原始附件列表
 
 // -- 方法 --
 /**
@@ -536,38 +543,25 @@ const saveConfig = async () => {
       viewId: targetViewId.value,
       fieldId: targetFieldId.value,
       modeOption: targetModeOption.value,
-      borderOption: targetBorderOption.value,
       numberShown: targetNumberShown.value,
       targetStyleRowNumber: targetStyleRowNumber.value,
       targetStyleColumnNumber: targetStyleColumnNumber.value,
       styleRowGap: targetStyleRowGap.value,
       styleColumnGap: targetStyleColumnGap.value,
-      targetStyleRadious: targetStyleRadious.value,
-      originAttachmentList: JSON.stringify(originAttachmentList),
+      targetStyleRadious: targetStyleRadius.value,
       logoShownList: JSON.stringify(logoShownList.value),
       targetCarouselSpeed: targetCarouselSpeed.value,
       targetStyleBgColor: targetStyleBgColor.value,
       targetStyleOpacity: targetStyleOpacity.value,
       targetStyleBorderColor: targetStyleBorderColor.value,
-      targetStyleBorderOpacity: targetStyleBorderOpacity.value,
       targetStyleBorderWidth: targetStyleBorderWidth.value,
       logoPercent: logoPercent.value,
+      targetBorderOption: targetBorderOption.value,
+      targetStyleBorderOpacity: targetStyleBorderOpacity.value,
     },
   });
 
-  // 初始化勾选字段
-  
-  // console.log(1111)
-  // // const data = await dashboard.getData()
-  // // console.log("data", data)
-  // const config = await dashboard.getConfig();
-  // console.log("config", config);
-  // if (!"customConfig" in config) await initWithoutConfig();
-  // else await initDashboard(config);
-
-  // console.log("originAttachmentList", originAttachmentList)
-  // window.location.reload();
-
+  await initDashboard();
 };
 
 const simulateCarouselChange = () => {
@@ -575,26 +569,13 @@ const simulateCarouselChange = () => {
     (carouselActiveIndex.value + 1) % logoShownList.value.length;
 };
 
-const onImageLoad = () => {
-  isLoading.value = false;
-};
 
-const hexToRgb = (hex) => {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : null;
-};
-
-/**
- * @command {} 格式化选项列表
- * @param {array} tableOptionList
- */
-const formatOptionList = async (oldOptionList) => {
+const formatOptionList = async (
+  oldOptionList: {
+    name: string;
+    id: string;
+  }[]
+) => {
   return oldOptionList.map((item) => {
     return {
       label: item.name,
@@ -603,116 +584,85 @@ const formatOptionList = async (oldOptionList) => {
   });
 };
 
-const queryAttachementList = async (tableId, viewId, attachmentFieldId, length) => {
-  const recordIdList = await myBase.queryVisibleRecordList(tableId, viewId);
+const queryAttachmentList = async (
+  tableId: string,
+  viewId: string,
+  fieldId: string,
+  length: number,
+  fieldType: FieldType
+) => {
+  const recordIdList = (await myBase.queryVisibleRecordList(tableId, viewId)).filter(
+    Boolean
+  ) as string[];
   if (recordIdList.length === 0) return;
 
-  return await myBase.queryAttachementList(
+  return await myBase.queryAttachmentList(
     tableId,
     recordIdList,
-    attachmentFieldId,
-    length
+    fieldId,
+    length,
+    fieldType
   );
 };
-
-/**
- * @command {set} originAttachmentList 设置logo数组为初始值
- * 
- */
-const SetLogoListToDefault = () => {
-  originAttachmentList = queryOriginalAttachmentListDefaultValue()
-  splitLogoShownList(originAttachmentList);
-}
 
 // --== 监听事件：包括 watch 方法和 @change 方法
 
 // 1. 依据tableId变化，更新viewOptionList
-watch(targetTableId, async (newTableId, oldTableId) => {
-  if (newTableId !== "") {
-    // 获取新的视图选项列表
-    viewOptionList.value = await queryViewOptionList(newTableId);
-    // 重置视图ID为默认值
-    targetViewId.value = queryViewIdDefaultValue();
-    // 根据新的表格ID和视图ID获取字段选项列表
-    fieldOptionList.value = await queryFieldOptionList(newTableId, targetViewId.value);
-    
-    SetLogoListToDefault()
-  }
-  if (oldTableId !== "") targetFieldId.value = "";
+watch(targetTableId, async (newTableId) => {
+  if (newTableId !== "") viewOptionList.value = await queryViewOptionList(newTableId);
+  fieldOptionList.value = await queryFieldOptionList(newTableId, targetViewId.value);
 });
 
 // 2. 依据viewId变化，更新fieldOptionList
-watch(targetViewId, async (newViewId, oldViewId) => {
-  console.log("watch field", newViewId, oldViewId);
-  if (newViewId !== "") {
+watch(targetViewId, async (newViewId) => {
+  if (newViewId !== "")
     fieldOptionList.value = await queryFieldOptionList(targetTableId.value, newViewId);
-    
-    SetLogoListToDefault()
-  }
-  if (oldViewId !== "") targetFieldId.value = "";
-    
 });
 
 // 3. 依据fieldId和viewId变化，获取attachmentList
-watch(
-  [targetViewId, targetFieldId],
-  async ([newViewId, newFieldId], [oldViewId, oldFieldId]) => {
-    if (newFieldId !== "" && newViewId !== "") {
-      originAttachmentList = await queryAttachementList(
+watch([targetViewId, targetFieldId], async ([newViewId, newFieldId], []) => {
+  if (newFieldId !== "" && newViewId !== "") {
+    originAttachmentList =
+      (await queryAttachmentList(
         targetTableId.value,
         targetViewId.value,
         newFieldId,
-        targetNumberShown.value
-      );
-      // 数组拆分
-      splitLogoShownList(originAttachmentList);
-    }
+        targetNumberShown.value,
+        fieldType.value
+      )) ?? [];
+    // 数组拆分
+    splitLogoShownList(originAttachmentList);
+    const previewData = await dashboard.getPreviewData();
+    console.log("previewData", previewData);
   }
-);
-
-// 4. 监听 state 变化
-watch(dashboard.state, async (newState, oldState) => {
-  state.value = dashboard.state;
 });
 
-/**
- * @command {} 监听 Table 选择
- * @param {string} e table id value
- */
-const onTableIdChange = (e) => {
+const onTableIdChange = async (e: string) => {
   targetTableId.value = e;
+  targetViewId.value = "allData";
+  targetFieldId.value = await queryFieldIdDefaultValue(e);
 };
 
-/**
- * @command {} 监听 View 选择
- * @param {string} e view id value
- */
-const onViewIdChange = (e) => {
+const onViewIdChange = (e: string) => {
   targetViewId.value = e;
   console.log("targetViewId.value", targetViewId.value);
 };
 
-/**
- * @command {} 监听 Attachment 选择
- * @param {string} e attachment field value
- */
-const onFieldIdChange = (e) => {
+const onFieldIdChange = (e: string) => {
   targetFieldId.value = e;
 };
 
-/**
- * @command {} 监听Logo显示的最大数量
- * @param {string} e mode value
- */
-const onOriginalNumberShownChange = async (e) => {
+const onOriginalNumberShownChange = async (e: number) => {
   if (targetNumberShown.value < e) {
     targetNumberShown.value = e;
-    originAttachmentList = await queryAttachementList(
-      targetTableId.value,
-      targetViewId.value,
-      targetFieldId.value,
-      targetNumberShown.value
-    );
+    originAttachmentList =
+      (await queryAttachmentList(
+        targetTableId.value,
+        targetViewId.value,
+        targetFieldId.value,
+        targetNumberShown.value,
+        fieldType.value
+      )) ?? [];
   } else {
     targetNumberShown.value = e;
     originAttachmentList = originAttachmentList.slice(0, targetNumberShown.value);
@@ -721,22 +671,10 @@ const onOriginalNumberShownChange = async (e) => {
   splitLogoShownList(originAttachmentList);
 };
 
-/**
- * @command {} 监听图片渲染模式
- * @param {string} e mode value
- */
-const onModeOptionChange = (e) => {
+const onModeOptionChange = (e: string) => {
   targetModeOption.value = e;
 };
 
-const onBorderOptionChange = (e) => {
-  targetBorderOption.value = e;
-};
-
-/**
- * @command {} 监听 轮播图切换
- * @param {string} newIndex 轮播图当前index
- */
 const onCarouselChange = (newIndex) => {
   carouselActiveIndex.value = newIndex;
 };
@@ -763,8 +701,16 @@ const onLogoPercent = (e) => {
   logoPercent.value = e;
 };
 
+const onBorderOptionChange = (e) => {
+  targetBorderOption.value = e;
+};
+
+const onOriginalStyleBorderOpacity = (e) => {
+  targetStyleBorderOpacity.value = e;
+};
+
 const onOriginalStyleRadious = (e) => {
-  targetStyleRadious.value = e;
+  targetStyleRadius.value = e;
 };
 
 const onOriginalStyleBorderWidth = (e) => {
@@ -779,10 +725,6 @@ const onOriginalStyleBorderColor = (e) => {
   targetStyleBorderColor.value = e;
 };
 
-const onOriginalStyleBorderOpacity = (e) => {
-  targetStyleBorderOpacity.value = e;
-};
-
 const onTargetCarouselSpeed = (e) => {
   targetCarouselSpeed.value = e;
   clearInterval(intervalId);
@@ -794,60 +736,64 @@ const onOriginalStyleOpacity = (e) => {
   targetStyleOpacity.value = e;
 };
 
-// --== 查询选项列表
-/**
- * @query {} 获取 view 选项列表
- * @param {string} tableId
- * @return {array} view 选项列表
- */
 const queryViewOptionList = async (tableId) => {
   const list = await myBase.queryViewMetaList(tableId);
   list.unshift({ name: t("allData"), id: "allData" });
   return await formatOptionList(list);
 };
 
-/**
- * @query {} 获取 field 选项列表
- * viewId 为空时，默认获取全部的数据
- * @param {string} tableId
- * @param {string} viewId
- * @return {array} field 选项列表
- */
 const queryFieldOptionList = async (tableId, viewId) => {
   const list = await myBase.queryFieldMetaList(tableId, viewId);
-  const listFiltered = list.filter((item) => item.type === 17);
+  const listFiltered = list.filter((item) =>
+    CONSTANT.SUPPORT_FIELD_TYPE.includes(item.type)
+  );
+  fieldMetaList.value = listFiltered;
   return await formatOptionList(listFiltered);
 };
 
-// --== 设置初始值
-/**
- * @command {init} 初始化表格Id选项
- *
- */
 const initTableOptionList = async () => {
   const list = await myBase.queryBaseTableMetaList();
   tableOptionList.value = await formatOptionList(list);
 };
 
-/**
- * @query {} 查询 table 的默认值
- * @return {string} table id value
- */
 const queryTableIdDefaultValue = async () => {
-  return tableOptionList.value[0].value;
+  for (let option of tableOptionList.value) {
+    const fields = await myBase.queryFieldMetaList(option.value, "allData");
+    // 判断该表格是否有 Attachment 或 Url 字段
+    if (
+      fields.some(
+        (field) => field.type === FieldType.Attachment || field.type === FieldType.Url
+      )
+    ) {
+      return option.value;
+    }
+  }
+  // 如果没有找到含有 Attachment 或 Url 字段的表格，则返回第一张表格的id
+  return tableOptionList.value[0]?.value;
 };
 
 const queryViewIdDefaultValue = () => {
   return "allData";
 };
 
-/**
- * @query {} 默认获取当前table下的全部field
- * @param {string} targetTableId tableId
- */
+const queryFieldIdDefaultValue = async (targetTableId: string) => {
+  const fields = await myBase.queryFieldMetaList(targetTableId, "allData");
+  let fieldId = "";
 
-const queryFieldIdDefaultValue = async (targetTableId) => {
-  return;
+  // 查找 Attachment 类型字段
+  fieldId = fields.find((field) => field.type === FieldType.Attachment)?.id;
+  if (fieldId) return fieldId;
+
+  // 查找 Url 类型字段
+  fieldId = fields.find((field) => field.type === FieldType.Url)?.id;
+  if (fieldId) return fieldId;
+
+  // 查找 Text 类型字段
+  fieldId = fields.find((field) => field.type === FieldType.Text)?.id;
+  if (fieldId) return fieldId;
+
+  // 选择第一个字段
+  return fields[0]?.id;
 };
 
 const queryOriginalAttachmentListDefaultValue = () => {
@@ -859,10 +805,6 @@ const queryOriginalAttachmentListDefaultValue = () => {
   return list;
 };
 
-/**
- * @command {update} 将 logo list 拆分成二维数组
- * @param {array} attachmentList 附件一维数组
- */
 const splitLogoShownList = (attachmentList) => {
   logoShownList.value = commonFn.splitListInto2DArray(
     attachmentList,
@@ -871,53 +813,48 @@ const splitLogoShownList = (attachmentList) => {
   console.log("logoShownList", logoShownList.value);
 };
 
-/**
- * @command {init} 如果没有配置时，进行初始化操作
- */
 const initWithoutConfig = async () => {
   await initTableOptionList();
 
   targetTableId.value = await queryTableIdDefaultValue();
   targetViewId.value = queryViewIdDefaultValue();
+  targetFieldId.value = await queryFieldIdDefaultValue(targetTableId.value);
   originAttachmentList = queryOriginalAttachmentListDefaultValue();
   splitLogoShownList(originAttachmentList);
 };
 
-/**
- * @command {init} 初始化仪表盘
- */
 const initDashboard = async (config) => {
   const customConfig = config.customConfig;
+  
+  await initTableOptionList();
 
   targetTableId.value =
     "tableId" in customConfig ? customConfig.tableId : await queryTableIdDefaultValue();
   targetViewId.value = customConfig.viewId;
   targetFieldId.value = customConfig.fieldId;
   targetModeOption.value = customConfig.modeOption;
-  targetBorderOption.value = customConfig.borderOption;
   targetNumberShown.value = customConfig.numberShown;
   targetStyleColumnNumber.value = customConfig.targetStyleColumnNumber;
   targetStyleRowNumber.value = customConfig.targetStyleRowNumber;
   targetStyleRowGap.value = customConfig.styleRowGap;
   targetStyleColumnGap.value = customConfig.styleColumnGap;
-  targetStyleRadious.value = customConfig.targetStyleRadious;
+  targetStyleRadius.value = customConfig.targetStyleRadious;
   targetCarouselSpeed.value = customConfig.targetCarouselSpeed;
   targetStyleBgColor.value = customConfig.targetStyleBgColor;
   targetStyleBorderColor.value = customConfig.targetStyleBorderColor;
-  targetStyleBorderOpacity.value = customConfig.targetStyleBorderOpacity;
   targetStyleBorderWidth.value = customConfig.targetStyleBorderWidth;
   targetStyleOpacity.value = customConfig.targetStyleOpacity;
   logoPercent.value = customConfig.logoPercent;
+  targetBorderOption.value = customConfig.targetBorderOption;
+  targetStyleBorderOpacity.value = customConfig.targetStyleBorderOpacity;
   logoShownList.value = JSON.parse(customConfig.logoShownList);
   originAttachmentList = JSON.parse(customConfig.originAttachmentList);
-  // targetCarouselSpeed.value =
-  //   "carouselSpeed" in customConfig ? customConfig.carouselSpeed : 5;
-  console.log("initDashboard >> logoShownList", logoShownList.value[0])
+  targetCarouselSpeed.value =
+    "carouselSpeed" in customConfig ? customConfig.carouselSpeed : 1;
+
   // 模拟定时切换
   intervalId = setInterval(simulateCarouselChange, targetCarouselSpeed.value * 1000);
 
-  // 获取初始值
-  initTableOptionList();
 };
 
 onMounted(async () => {
@@ -927,23 +864,12 @@ onMounted(async () => {
   if (state.value == STATE_ARRAY[0]) {
     await initWithoutConfig();
   } else {
-    console.log(1111)
-    // const data = await dashboard.getData()
-    // console.log("data", data)
     const config = await dashboard.getConfig();
     console.log("config", config);
     if (!"customConfig" in config) await initWithoutConfig();
     else await initDashboard(config);
   }
 });
-
-onUpdated( () => {
-  console.log(3333)
-})
-
-onUnmounted(async () => {
-  console.log(222)
-})
 </script>
 
 <style scoped>
@@ -953,7 +879,6 @@ onUnmounted(async () => {
 }
 
 .layout-content {
-  /* border: 1px solid #DEE0E3; */
   align-items: center;
   justify-content: center;
 }

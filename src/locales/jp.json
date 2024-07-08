@@ -19,7 +19,7 @@
       "border_opacity": "境界線の透明度",
       "logo_size": "ロゴのサイズ"
     },
-    "speed": "スライド遅延",
+    "speed": "スイッチング速度",
     "show_page_break": "ページブレイクを表示"
   },
   "allData": "全てのデータ",
