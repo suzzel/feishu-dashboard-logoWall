@@ -1,1 +1,9 @@
-@import 'reset-css';
+@import "reset-css";
+body {
+    background: transparent !important;
+    background-image: none !important;
+}
+
+body[theme-mode=dark] .lable {
+  /* color: #fff; */
+}

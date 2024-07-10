@@ -3,7 +3,7 @@
     "table": "データソース",
     "view": "データ範囲",
     "field": "アイコン",
-    "mode": "埋め込み方法",
+    "mode": "塗りつぶし方法",
     "number": "数量",
     "style": {
       "name": "スタイル",
@@ -11,17 +11,20 @@
       "column_num": "列数",
       "row_gap": "行間隔",
       "column_gap": "列間隔",
-      "radius": "角丸",
-      "border_width": "ボーダー幅",
-      "border_color": "ボーダーカラー",
-      "background_color": "背景色"
+      "radius": "角の丸み",
+      "border_width": "枠の幅",
+      "border_color": "枠の色",
+      "background_color": "背景色",
+      "background_opacity": "背景の不透明度",
+      "border_opacity": "枠の不透明度",
+      "logo_size": "ロゴサイズ"
     },
-    "speed": "スライド遅延",
-    "show_page_break": "ページブレイクを表示"
+    "speed": "切り替え速度",
+    "show_page_break": "改ページを表示"
   },
-  "allData": "全てのデータ",
+  "allData": "全データ",
   "placeholder": {
-    "attachment": "添付ファイルフィールドを選択してください"
+    "attachment": "添付フィールドを選択してください"
   },
   "btn": {
     "save": "保存"
